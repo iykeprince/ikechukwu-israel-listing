@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       title: 'Ikechukwu Israel',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Colors.white,
+        primarySwatch: Colors.deepOrange,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: HomeScreen(),

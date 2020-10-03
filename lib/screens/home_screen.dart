@@ -5,12 +5,11 @@ import 'package:ikechukwu_israel/models/csv.dart';
 import 'package:ikechukwu_israel/models/filter.dart';
 import 'package:ikechukwu_israel/providers/csv_provider.dart';
 import 'package:ikechukwu_israel/providers/list_provider.dart';
+import 'package:ikechukwu_israel/screens/csv_screen.dart';
 import 'package:ikechukwu_israel/utils/custom_helpers.dart';
 import 'package:ikechukwu_israel/utils/custom_shape_clipper.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
-
-List<Filter> filters = [];
 
 class HomeScreen extends StatefulWidget {
   static const String ROUTE_NAME = "/home";
@@ -21,56 +20,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int selectedFilterIndex = -1;
-  List<Csv> filteredList = [];
   PageController _pageController;
-
-  loadAsset() async {
-    String myData = await rootBundle.loadString("Venten/car_ownsers_data.csv");
-    List<List<dynamic>> csvTable = CsvToListConverter().convert(myData);
-    List<Csv> csvList = listToMap(csvTable);
-    setState(() {
-      filteredList = csvList;
-    });
-  }
-
-  List<Csv> listToMap(List<List<dynamic>> list) {
-    List<Csv> csvList = [];
-    for (int i = 1; i < list.length; i++) {
-      Csv csv = Csv(
-        id: list[i][0],
-        first_name: list[i][1],
-        last_name: list[i][2],
-        email: list[i][3],
-        country: list[i][4],
-        car_model: list[i][5],
-        car_model_year: list[i][6],
-        car_color: list[i][7],
-        gender: list[i][8],
-        job_title: list[i][9],
-        bio: list[i][10],
-      );
-      csvList.add(csv);
-    }
-    return csvList;
-  }
-
-  List<Csv> loadFilteredList(Filter selectedFilter) {
-    print('loading new filters: $filteredList');
-    List<Csv> newFilteredList = filteredList
-        .where((filter) =>
-            selectedFilter.startYear >= filter.car_model_year &&
-            selectedFilter.endYear <= filter.car_model_year)
-        .toList();
-    print('new filteredList size: ${newFilteredList.length}');
-    print('new filteredList: ${newFilteredList}');
-    return newFilteredList;
-  }
+  List<Filter> filters = [];
+  int selectedFilterIndex = -1;
+  List<Csv> _filteredList = [];
 
   @override
   void initState() {
     _pageController = PageController(viewportFraction: .8);
-    loadAsset();
+
     super.initState();
   }
 
@@ -81,58 +39,67 @@ class _HomeScreenState extends State<HomeScreen> {
             (value) => value.getListings());
 
     return Scaffold(
-      body: FutureBuilder<List<Filter>>(
-          future: filterFuture,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              filters = snapshot.data;
-              return SingleChildScrollView(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Stack(
-                        children: [
-                          ClipPath(
-                            clipper: CustomShapeClipper(),
-                            child: Container(
-                              height: 400.0,
-                              decoration: BoxDecoration(
-                                  gradient: LinearGradient(colors: [
-                                Colors.deepOrange,
-                                Colors.orange
-                              ])),
-                              child: Column(
-                                children: [
-                                  SizedBox(height: 24),
-                                  _buildHeader(),
-                                  _buildListings(),
-                                  SizedBox(
-                                    height: 20,
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: FutureBuilder<List<Filter>>(
+                future: filterFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    filters = snapshot.data;
+                    return SingleChildScrollView(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Stack(
+                              children: [
+                                ClipPath(
+                                  clipper: CustomShapeClipper(),
+                                  child: Container(
+                                    height: 400.0,
+                                    decoration: BoxDecoration(
+                                        gradient: LinearGradient(colors: [
+                                      Colors.deepOrange,
+                                      Colors.orange
+                                    ])),
+                                    child: Column(
+                                      children: [
+                                        SizedBox(
+                                          height: 24.0,
+                                        ),
+                                        _buildHeader(),
+                                        _buildListings(),
+                                        SizedBox(
+                                          height: 20,
+                                        ),
+                                        _buildIndicator(context),
+                                      ],
+                                    ),
                                   ),
-                                  _buildIndicator(context),
-                                ],
-                              ),
+                                )
+                              ],
                             ),
-                          )
-                        ],
+                            SizedBox(height: 20),
+                            _buildFilterBox(context),
+//                            _buildCsvList(context, _filteredList),
+//                          CsvScreen()
+                          ],
+                        ),
                       ),
-                      SizedBox(height: 20),
-                      _buildYearFilter(),
-                      _buildCsvList(context, filteredList),
-                    ],
-                  ),
-                ),
-              );
-            } else {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-          }),
+                    );
+                  } else {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                }),
+          )
+        ],
+      ),
     );
   }
 
@@ -169,6 +136,163 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String _selectedYear;
+  String _selectedGender;
+  String _selectedCountry;
+  String _selectedColor;
+
+//  List<String> countries = ['ALL'];
+//  List<String> colors = ['ALL'];
+
+
+//  loadFilters(){
+//    filters.forEach((element) {
+//      Filter obj = element;
+//      yearSet.add('${obj.startYear} - ${obj.endYear}');
+//      obj.countries.forEach((country) {
+//        countrySet.add(country);
+//      });
+//
+//      obj.colors.forEach((color) {
+//        colorSet.add(color);
+//      });
+//    });
+//  }
+
+  _buildFilterBox(BuildContext context) {
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 24.0,
+        vertical: 8.0,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            child: Text(
+              'Filter By',
+              style: TextStyle(
+                fontSize: 15.0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButton(
+                  items: context.watch<CsvProvider>().yearSet.toList().map((year) {
+                    return DropdownMenuItem<String>(
+                      value: year,
+                      child: FittedBox(
+                        child: Text(year),
+                      ),
+                    );
+                  }).toList(),
+                  value: _selectedYear,
+                  onChanged: (selectedYear) {
+                    print('selected year: $selectedYear');
+                    setState(() {
+                      _selectedYear = selectedYear;
+                    });
+                  },
+                  isExpanded: false,
+                  hint: Text(
+                    'Year',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 4),
+              Expanded(
+                child: DropdownButton(
+                  items: context.watch<CsvProvider>().genderSet.toList().map((gender) {
+                    return DropdownMenuItem<String>(
+                      value: gender,
+                      child: Text(gender),
+                    );
+                  }).toList(),
+                  onChanged: (selectedGender) {
+//                    List<Csv> filterGenderList = filterByGender(selectedGender);
+//                    print('filter gender list: $filterGenderList');
+                    print('gender $selectedGender');
+                    setState(() {
+                      _selectedGender = selectedGender;
+                    });
+                  },
+                  value: _selectedGender,
+                  isExpanded: true,
+                  hint: Text(
+                    'Gender',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 4),
+              Expanded(
+                child: DropdownButton(
+                  items: context.watch<CsvProvider>().countrySet.toList().map((country) {
+                    return DropdownMenuItem<String>(
+                      value: country,
+                      child: Text(country),
+                    );
+                  }).toList(),
+                  onChanged: (selectedCountry) {
+                    setState(() {
+                      _selectedCountry = selectedCountry;
+                    });
+                  },
+                  value: _selectedCountry,
+                  isExpanded: true,
+                  hint: Text(
+                    'Country',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 4),
+              Expanded(
+                child: DropdownButton(
+                  items: context.watch<CsvProvider>().colorSet.toList().map((color) {
+                    return DropdownMenuItem<String>(
+                      value: color,
+                      child: Text(color),
+                    );
+                  }).toList(),
+                  onChanged: (selectedColor) {
+                    setState(() {
+                      _selectedColor = selectedColor;
+                    });
+                  },
+                  value: _selectedColor,
+                  isExpanded: true,
+                  hint: Text(
+                    'Color',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildListings() {
     return Container(
       height: 200,
@@ -185,71 +309,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  _buildYearFilter() {
-    List<Filter> nlist = filters;
-    nlist.sort((a, b) => a.startYear.compareTo(b.startYear));
-    return Container(
-      height: 50.0,
-      padding: EdgeInsets.only(left: 20.0),
-
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: nlist.length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      selectedFilterIndex = index;
-                    });
-                  },
-                  child: Container(
-                      height: 40.0,
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      margin: EdgeInsets.only(right: 4.0),
-                      decoration: BoxDecoration(
-                        color: selectedFilterIndex == index
-                            ? Colors.black
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: Colors.black,
-                          width: 1.0,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 5,
-                            blurRadius: 7,
-                            offset: Offset(0, 3), // changes position of shadow
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${nlist[index].startYear} - ${nlist[index].endYear}',
-                          style: TextStyle(
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w600,
-                              color: selectedFilterIndex == index
-                                  ? Colors.white
-                                  : Colors.black),
-                        ),
-                      ),
-                  ),
-                );
-              },
-              scrollDirection: Axis.horizontal,
-              physics: BouncingScrollPhysics(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildItem(BuildContext context, int index) {
     var obj = filters[index];
 
@@ -258,20 +317,22 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           selectedFilterIndex = index;
           print('selectedFilterIndex $index');
-          filteredList = loadFilteredList(filters[selectedFilterIndex]);
+//          filteredList = loadFilteredList(filters[selectedFilterIndex]);
         });
       },
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0,),
+        margin: EdgeInsets.symmetric(
+          horizontal: 8.0,
+          vertical: 6.0,
+        ),
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            image: DecorationImage(
-              image: AssetImage(index >= filters.length
-                  ? CustomHelpers.backgrounds[filters.length % index]
-                  : CustomHelpers.backgrounds[index]),
-              fit: BoxFit.cover,
-            ),
-
+          borderRadius: BorderRadius.circular(12),
+          image: DecorationImage(
+            image: AssetImage(index >= filters.length
+                ? CustomHelpers.backgrounds[filters.length % index]
+                : CustomHelpers.backgrounds[index]),
+            fit: BoxFit.cover,
+          ),
         ),
         child: Stack(
           overflow: Overflow.clip,
@@ -293,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
               right: 4,
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+                const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,35 +397,35 @@ class _HomeScreenState extends State<HomeScreen> {
               left: 8.0,
               child: Container(
                   child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Gender',
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  obj.gender != ""
-                      ? Text(
-                          '${obj.gender.toUpperCase()}',
-                          style: TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          "N/A",
-                          style: TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Gender',
+                        style: TextStyle(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
-                ],
-              )),
+                      ),
+                      obj.gender != ""
+                          ? Text(
+                        '${obj.gender.toUpperCase()}',
+                        style: TextStyle(
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      )
+                          : Text(
+                        "N/A",
+                        style: TextStyle(
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )),
             ),
             Positioned(
               bottom: 4,
@@ -435,94 +496,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildCsvList(BuildContext context, filteredList) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: 4.0,
-        horizontal: 20.0,
-      ),
-      child: Expanded(
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: 10,
-          itemBuilder: (context, index) => _listItem(context, index),
-          scrollDirection: Axis.vertical,
-          physics: BouncingScrollPhysics(),
-        ),
-      ),
-    );
-  }
-
-  _listItem(context, index) {
-    Csv csv = filteredList[index];
-    return Container(
-      padding: EdgeInsets.all(16.0),
-      margin: EdgeInsets.only(bottom: 8.0),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.grey,
-          width: 2,
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text('Full Name'),
-              Text('${csv.first_name} ${csv.last_name}'),
-            ],
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text('Email'),
-              Text('${csv.email}'),
-            ],
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text('Country'),
-              Text('${csv.country}'),
-            ],
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text('Car Make, Color and Year'),
-              Text('${csv.car_color}, ${csv.car_model} and ${csv.car_model_year}'),
-            ],
-          ),
-
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text('Gender'),
-              Text('${csv.gender}'),
-            ],
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text('Job Title'),
-              Text('${csv.job_title}'),
-            ],
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text('Bio'),
-              Text('${csv.bio}'),
-            ],
-          ),
-        ],
       ),
     );
   }

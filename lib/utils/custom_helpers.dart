@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ikechukwu_israel/models/csv.dart';
 
 class CustomHelpers {
   static const Color customAmber = Color(0xFFFCD228);
@@ -37,5 +38,26 @@ class CustomHelpers {
         default:
           return Colors.black;
     }
+  }
+
+  static List<Csv> listToMap(List<List<dynamic>> list) {
+    List<Csv> csvList = [];
+    for (int i = 1; i < list.length; i++) {
+      Csv csv = Csv(
+        id: list[i][0],
+        first_name: list[i][1],
+        last_name: list[i][2],
+        email: list[i][3],
+        country: list[i][4],
+        car_model: list[i][5],
+        car_model_year: list[i][6],
+        car_color: list[i][7],
+        gender: list[i][8],
+        job_title: list[i][9],
+        bio: list[i][10],
+      );
+      csvList.add(csv);
+    }
+    return csvList;
   }
 }
