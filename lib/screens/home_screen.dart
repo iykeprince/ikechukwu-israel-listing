@@ -11,75 +11,110 @@ import 'csv_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   static const String ROUTE_NAME = "/home";
-  HomeScreen({Key key}) : super(key: key);
+  HomeScreen({Key key}) {
+    _scrollController = ScrollController();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  List<Csv> providerCsvList;
+  List<Filter> filters;
+  DataProvider dataProvider;
+  FilterProvider filterProvider;
+
+  _scrollListener() {
+    var isEnd = (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent) &&
+        !_scrollController.position.outOfRange &&
+        (_scrollController.position.axisDirection == AxisDirection.down);
+
+    if (isEnd) {
+      _getMoreData();
+    }
+  }
+
+  _getMoreData() {
+    for (int i = dataProvider.currentMax;
+        i < dataProvider.currentMax + 10;
+        i++) {
+      dataProvider.addCsvList(providerCsvList[i]);
+    }
+
+    dataProvider.currentMax += 10;
+  }
 
   int selectedFilterIndex = -1;
-  List<Csv> _filteredList = [];
+  List<Csv> csvList = [];
+
+  ScrollController _scrollController;
 
   @override
   Widget build(BuildContext context) {
+    providerCsvList = Provider.of<List<Csv>>(context);
+    dataProvider = Provider.of<DataProvider>(context);
+    filters = Provider.of<List<Filter>>(context);
+    filterProvider = Provider.of<FilterProvider>(context);
+
+    if (filters != null) {
+      filterProvider.filters = filters;
+    }
+
+    if (providerCsvList != null && dataProvider.currentMax == 10) {
+      dataProvider.csvList = List.generate(
+          dataProvider.currentMax, (index) => providerCsvList[index]);
+    }
+
     return Scaffold(
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           SliverToBoxAdapter(
-            child: FutureBuilder(
-                future: context.select<FilterProvider, Future>(
-                    (value) => value.getFilters()),
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.none:
-                    case ConnectionState.waiting:
-                    case ConnectionState.active:
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    case ConnectionState.done:
-                      
-                      return SingleChildScrollView(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Stack(
+                    children: [
+                      ClipPath(
+                        clipper: CustomShapeClipper(),
                         child: Container(
+                          height: 400.0,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                          ),
+                              gradient: LinearGradient(
+                                  colors: [Colors.deepOrange, Colors.orange])),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Stack(
-                                children: [
-                                  ClipPath(
-                                    clipper: CustomShapeClipper(),
-                                    child: Container(
-                                      height: 400.0,
-                                      decoration: BoxDecoration(
-                                          gradient: LinearGradient(colors: [
-                                        Colors.deepOrange,
-                                        Colors.orange
-                                      ])),
-                                      child: Column(
-                                        children: [
-                                          SizedBox(
-                                            height: 24.0,
-                                          ),
-                                          _buildHeader(),
-                                          FilterLayout(
-                                            filters: snapshot.data,
-                                          ),
-                                        ],
-                                      ),
+                              SizedBox(
+                                height: 24.0,
+                              ),
+                              _buildHeader(),
+                              filters == null && filters.length == 0
+                                  ? Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : FilterLayout(
+                                      filters: filters,
                                     ),
-                                  )
-                                ],
-                              ),
-                              SizedBox(height: 20),
-                              FilterBox(
-                                filters: snapshot.data,
-                              ),
-                              CsvScreen(),
                             ],
                           ),
                         ),
-                      );
-                  }
-                }),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  filters == null && filters.length == 0
+                      ? Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      : FilterBox(
+                          filters: filters,
+                        ),
+                  CsvScreen(),
+                ],
+              ),
+            ),
           )
         ],
       ),
@@ -378,17 +413,20 @@ class _FilterBoxState extends State<FilterBox> {
   int selectedYear;
   String selectedGender;
   String selectedCountry;
-  String selectedColor;
+  
   Filter selectedFilter;
 
   Set<String> yearSet = Set();
-  Set<String> colorSet = Set();
+  
   Set<String> countrySet = Set();
   Set<String> genderSet = Set();
 
+  DataProvider dataProvider;
+
   @override
   Widget build(BuildContext context) {
-    
+    dataProvider = Provider.of<DataProvider>(context);
+
     widget.filters.forEach((element) {
       Filter obj = element;
       yearSet.add('${obj.startYear}');
@@ -398,7 +436,7 @@ class _FilterBoxState extends State<FilterBox> {
       });
 
       obj.colors.forEach((color) {
-        colorSet.add(color);
+        dataProvider.colorSet.add(color);
       });
     });
     return Container(
@@ -498,20 +536,17 @@ class _FilterBoxState extends State<FilterBox> {
               SizedBox(width: 4),
               Expanded(
                 child: DropdownButton(
-                  items: colorSet.toList().map((color) {
+                  items: dataProvider.colorSet.toList().map((color) {
                     return DropdownMenuItem<String>(
                       value: color,
                       child: Text(color),
                     );
                   }).toList(),
                   onChanged: (selectedColor) {
-                    setState(() {
-                      selectedColor = selectedColor;
-                    });
-                    // context.select<CsvProvider, void>(
-                    //     (value) => value.filterByColor(selectedColor));
+                    dataProvider.setSelectedColor(selectedColor);
+                    dataProvider.filterByColor(selectedColor);
                   },
-                  value: selectedColor,
+                  value: dataProvider.selectedColor,
                   isExpanded: true,
                   hint: Text(
                     'Color',

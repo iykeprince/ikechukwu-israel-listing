@@ -5,6 +5,7 @@ import 'package:ikechukwu_israel/utils/custom_helpers.dart';
 
 class CsvProvider {
   List<Csv> list;
+  
 
   Future<List<Csv>> loadCsv() async {
     String myData = await loadAsset();

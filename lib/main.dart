@@ -13,6 +13,7 @@ void main() {
       ChangeNotifierProvider(create: (_) => FilterProvider()),
       ChangeNotifierProvider(create: (_) => DataProvider()),
       FutureProvider(create: (_) => CsvProvider().loadCsv()),
+      FutureProvider(create: (_) => FilterProvider().getFilters()),
     ],
     child: MyApp(),
     ),

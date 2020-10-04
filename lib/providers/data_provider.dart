@@ -5,39 +5,53 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:ikechukwu_israel/utils/custom_helpers.dart';
 
 class DataProvider with ChangeNotifier {
-  int _currentMax = 10;
+  int currentMax = 10;
   bool isFiltered = false;
-  List<Csv> _csvList = [];
+  List<Csv> csvList = [];
 
+  String selectedColor;
 
+  Set<String> colorSet = Set();
 
-  int get currentMax => _currentMax;
-  List<Csv> get csvList => _csvList;
+  setSelectedColor(String color) {
+    selectedColor = color;
+    print('selectedColor: $color');
+    notifyListeners();
+  }
+
+  setCsvList(List<Csv> csvList) {
+    csvList = csvList;
+    notifyListeners();
+  }
+
+  addCsvList(Csv csv) {
+    csvList.add(csv);
+    notifyListeners();
+  }
 
   filterByYear(int year) {
     isFiltered = true;
-    _csvList.where((element) =>
-        element.car_model_year == year);
+    csvList.where((element) => element.car_model_year == year);
 
     notifyListeners();
   }
 
   filterByGender(String gender) {
     isFiltered = true;
-    _csvList.where((element) => element.gender == gender).toList();
+    csvList.where((element) => element.gender == gender).toList();
 
     notifyListeners();
   }
 
   filterByCountry(String country) {
     isFiltered = true;
-    _csvList.where((element) => element.country == country).toList();
+    csvList.where((element) => element.country == country).toList();
     notifyListeners();
   }
 
   filterByColor(String color) {
     isFiltered = true;
-    _csvList.where((element) => element.car_color == color).toList();
+    csvList.where((element) => element.car_color == color).toList();
     notifyListeners();
   }
 }

@@ -7,40 +7,18 @@ import 'package:ikechukwu_israel/utils/custom_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-class CsvScreen extends StatefulWidget {
+class CsvScreen extends StatelessWidget {
   static const String ROUTE_NAME = "/csv";
-  CsvScreen({Key key}) : super(key: key);
+  CsvScreen({
+    Key key,
+  }) : super(key: key);
 
-  @override
-  _CsvScreenState createState() => _CsvScreenState();
-}
-
-class _CsvScreenState extends State<CsvScreen> {
-  ScrollController _scrollController;
-  int _currentMax = 10;
-  bool isLoadingAsset = false;
-  List<Csv> _csvList = [];
-  @override
-  void initState() {
-    _scrollController = ScrollController();
-    _scrollController.addListener(_scrollListener);
-    super.initState();
-  }
-
-  _scrollListener() {
-    print('scrolling...');
-  }
-
-  _getMoreData() {
-    print('loading more data');
-    for (int i = _currentMax; i < _currentMax + 10; i++) {}
-  }
+  List<Csv> providerCsvList;
 
   @override
   Widget build(BuildContext context) {
-    List<Csv> providerCsvList = Provider.of<List<Csv>>(context);
-    _csvList = List.generate(_currentMax, (index) => providerCsvList[index]);
-    print('waiting for csv to load: $_csvList');
+    var dataProvider = Provider.of<DataProvider>(context);
+
     return Container(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -59,40 +37,21 @@ class _CsvScreenState extends State<CsvScreen> {
               ),
             ],
           ),
-          _csvList == null || _csvList.length == 0
+          dataProvider.csvList == null || dataProvider.csvList.length == 0
               ? Center(
                   child: CircularProgressIndicator(),
                 )
-              : _buildCsvList(context, _csvList)
+              : _buildCsvList(context, dataProvider.csvList)
         ],
       ),
     );
   }
 
-  Widget _buildNotFiltered() {
-    return Container(
-      height: 320,
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Text(
-                'No filter selected',
-                style: TextStyle(
-                  fontSize: 19,
-                ),
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
 
   Widget _buildCsvList(BuildContext context, List<Csv> csvList) {
     return ListView.builder(
+      physics: NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      controller: _scrollController,
       itemCount: csvList.length + 1,
       itemBuilder: (context, index) {
         if (index == csvList.length) {
@@ -103,7 +62,6 @@ class _CsvScreenState extends State<CsvScreen> {
         return _listItem(context, index, csvList);
       },
       scrollDirection: Axis.vertical,
-      physics: BouncingScrollPhysics(),
     );
   }
 
@@ -152,6 +110,7 @@ class _CsvScreenState extends State<CsvScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text('${index + 1}'),
                         Text(
                           'Full Name',
                           style: TextStyle(

@@ -3,7 +3,7 @@ import 'package:ikechukwu_israel/models/filter.dart';
 import 'package:ikechukwu_israel/repository/repository.dart';
 
 class FilterProvider with ChangeNotifier {
-  final Repository repo = Repository();
+  Repository repo = Repository();
   List<Filter> filters = [];
   int page = 0;
   
@@ -19,9 +19,7 @@ class FilterProvider with ChangeNotifier {
   void setFilters(List<Filter> filters) {
     filters = filters;
   }
-  Future<List<Filter>> getFilters() {
-    return repo.getFilters();
-  }
+ 
 
   setSelectedYear(selectedYear) {
     selectedYear = selectedYear;
@@ -46,5 +44,10 @@ class FilterProvider with ChangeNotifier {
   setSelectedFilter(Filter selectedFilter) {
     selectedFilter = selectedFilter;
     notifyListeners();
+  }
+
+  
+  Future<List<Filter>> getFilters() async {
+    return await repo.getFilters();
   }
 }
