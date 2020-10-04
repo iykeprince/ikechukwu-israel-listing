@@ -30,6 +30,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.deepOrange,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        fontFamily: 'Raleway'
       ),
       home: HomeScreen(),
       onGenerateRoute: CustomRouter.generateRoute,
