@@ -1,6 +1,6 @@
 # ikechukwu_israel
 
-A new Flutter project.
+A car owner's listing mobile application
 
 ## Getting Started
 
