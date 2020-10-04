@@ -18,9 +18,20 @@ class CsvScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<DataProvider>(context);
+    
 
     return Container(
-      child: Column(
+        child: dataProvider.csvList == null
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : !dataProvider.isFiltered
+                ? _buildNoContentAvailable('No content to filter')
+                : _buildCsvList(context, dataProvider.csvList,),);
+  }
+
+  Widget _buildCsvList(BuildContext context, List<Csv> csvList) {
+    return csvList.length == 0 ? _buildNoContentAvailable('No data available to display'): Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -37,32 +48,21 @@ class CsvScreen extends StatelessWidget {
               ),
             ],
           ),
-          dataProvider.csvList == null || dataProvider.csvList.length == 0
-              ? Center(
+          ListView.builder(
+            physics: NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: csvList.length + 1,
+            itemBuilder: (context, index) {
+              if (index == csvList.length) {
+                return Center(
                   child: CircularProgressIndicator(),
-                )
-              : _buildCsvList(context, dataProvider.csvList)
-        ],
-      ),
-    );
-  }
-
-
-  Widget _buildCsvList(BuildContext context, List<Csv> csvList) {
-    return ListView.builder(
-      physics: NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: csvList.length + 1,
-      itemBuilder: (context, index) {
-        if (index == csvList.length) {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-        return _listItem(context, index, csvList);
-      },
-      scrollDirection: Axis.vertical,
-    );
+                );
+              }
+              return _listItem(context, index, csvList);
+            },
+            scrollDirection: Axis.vertical,
+          ),
+        ]);
   }
 
   _listItem(context, index, List<Csv> csvList) {
@@ -110,7 +110,6 @@ class CsvScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${index + 1}'),
                         Text(
                           'Full Name',
                           style: TextStyle(
@@ -304,6 +303,35 @@ class CsvScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  _buildNoContentAvailable(String text) {
+    return Stack(
+      fit: StackFit.loose,
+      children: [
+        Container(
+          height: 280.0,
+        ),
+        Container(
+          height: 240,
+          decoration: BoxDecoration(
+              image: DecorationImage(
+            fit: BoxFit.cover,
+            image: AssetImage("assets/backgrounds/no-content.png"),
+          )),
+        ),
+        Positioned(
+          top: 10,
+          right: 10,
+          child: Text(
+            '$text',
+            style: TextStyle(
+              fontSize: 18.0,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

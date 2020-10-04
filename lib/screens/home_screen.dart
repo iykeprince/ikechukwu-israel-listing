@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ikechukwu_israel/models/csv.dart';
 import 'package:ikechukwu_israel/models/filter.dart';
+import 'package:ikechukwu_israel/models/year_range.dart';
 import 'package:ikechukwu_israel/providers/data_provider.dart';
 import 'package:ikechukwu_israel/providers/filter_provider.dart';
 import 'package:ikechukwu_israel/utils/custom_helpers.dart';
@@ -47,22 +48,26 @@ class HomeScreen extends StatelessWidget {
 
   ScrollController _scrollController;
 
+  initLoad() {
+    if (providerCsvList != null) {
+      print('providerCsvList: ${providerCsvList.length}');
+      List.generate(dataProvider.currentMax,
+          (index) => dataProvider.addCsvList(providerCsvList[index]));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    providerCsvList = Provider.of<List<Csv>>(context);
-    dataProvider = Provider.of<DataProvider>(context);
-    filters = Provider.of<List<Filter>>(context);
-    filterProvider = Provider.of<FilterProvider>(context);
+    providerCsvList = Provider.of<List<Csv>>(context, listen: true);
+    dataProvider = Provider.of<DataProvider>(context, listen: false);
+    filters = Provider.of<List<Filter>>(context, listen: false);
+    filterProvider = Provider.of<FilterProvider>(context, listen: false);
 
     if (filters != null) {
       filterProvider.filters = filters;
     }
 
-    if (providerCsvList != null && dataProvider.currentMax == 10) {
-      dataProvider.csvList = List.generate(
-          dataProvider.currentMax, (index) => providerCsvList[index]);
-    }
-
+    Future.delayed(Duration.zero, () async => initLoad());
     return Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
@@ -70,7 +75,7 @@ class HomeScreen extends StatelessWidget {
           SliverToBoxAdapter(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.white54,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +95,7 @@ class HomeScreen extends StatelessWidget {
                                 height: 24.0,
                               ),
                               _buildHeader(),
-                              filters == null && filters.length == 0
+                              filters == null
                                   ? Center(
                                       child: CircularProgressIndicator(),
                                     )
@@ -104,7 +109,7 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 20),
-                  filters == null && filters.length == 0
+                  filters == null
                       ? Center(
                           child: CircularProgressIndicator(),
                         )
@@ -401,25 +406,9 @@ class _FilterState extends State<FilterLayout> {
   }
 }
 
-class FilterBox extends StatefulWidget {
+class FilterBox extends StatelessWidget {
   final List<Filter> filters;
   FilterBox({Key key, this.filters}) : super(key: key);
-
-  @override
-  _FilterBoxState createState() => _FilterBoxState();
-}
-
-class _FilterBoxState extends State<FilterBox> {
-  int selectedYear;
-  String selectedGender;
-  String selectedCountry;
-  
-  Filter selectedFilter;
-
-  Set<String> yearSet = Set();
-  
-  Set<String> countrySet = Set();
-  Set<String> genderSet = Set();
 
   DataProvider dataProvider;
 
@@ -427,18 +416,23 @@ class _FilterBoxState extends State<FilterBox> {
   Widget build(BuildContext context) {
     dataProvider = Provider.of<DataProvider>(context);
 
-    widget.filters.forEach((element) {
+    filters.forEach((element) {
       Filter obj = element;
-      yearSet.add('${obj.startYear}');
-      genderSet.add(obj.gender);
-      obj.countries.forEach((country) {
-        countrySet.add(country);
-      });
+      YearRange yearRange = YearRange(
+        startYear: obj.startYear,
+        endYear: obj.endYear,
+      );
 
+      dataProvider.yearSet.add(yearRange);
+      dataProvider.genderSet.add(obj.gender);
+      obj.countries.forEach((country) {
+        dataProvider.countrySet.add(country);
+      });
       obj.colors.forEach((color) {
         dataProvider.colorSet.add(color);
       });
     });
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: 24.0,
@@ -449,29 +443,53 @@ class _FilterBoxState extends State<FilterBox> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            child: Text(
-              'Filter By',
-              style: TextStyle(
-                fontSize: 15.0,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Filter By',
+                  style: TextStyle(
+                    fontSize: 15.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                dataProvider.isFiltered
+                    ? RaisedButton.icon(
+                        onPressed: () {
+                          dataProvider.setSelectedYear(null);
+                          dataProvider.setSelectedGender(null);
+                          dataProvider.setSelectedCountry(null);
+                          dataProvider.setSelectedColor(null);
+                          dataProvider.isFiltered = false;
+                        },
+                        icon: Icon(Icons.clear, color: Colors.white,),
+                        label: Text('Clear filter', style: TextStyle(color: Colors.white,),),
+                        color: Colors.indigo,
+                      )
+                    : Container(),
+              ],
             ),
           ),
           Row(
             children: [
               Expanded(
                 child: DropdownButton(
-                  items: yearSet.toList().map((year) {
-                    return DropdownMenuItem<String>(
-                      value: year,
-                      child: Text('$year'),
+                  items: dataProvider.yearSet.toList().map((yearRange) {
+                    return DropdownMenuItem<YearRange>(
+                      value: yearRange,
+                      child: Text(
+                        '${yearRange.startYear} - ${yearRange.endYear}',
+                        style: TextStyle(
+                          fontSize: 10,
+                        ),
+                      ),
                     );
                   }).toList(),
-                  value: selectedYear,
+                  value: dataProvider.selectedYear,
                   onChanged: (selectedYear) {
-                    setState(() {
-                      selectedYear = selectedYear;
-                    });
+                    dataProvider.csvList.clear();
+                    dataProvider.setSelectedYear(selectedYear);
                   },
                   isExpanded: false,
                   hint: Text(
@@ -486,18 +504,17 @@ class _FilterBoxState extends State<FilterBox> {
               SizedBox(width: 4),
               Expanded(
                 child: DropdownButton(
-                  items: genderSet.toList().map((gender) {
+                  items: dataProvider.genderSet.toList().map((gender) {
                     return DropdownMenuItem<String>(
                       value: gender,
                       child: Text(gender),
                     );
                   }).toList(),
                   onChanged: (selectedGender) {
-                    setState(() {
-                      selectedGender = selectedGender;
-                    });
+                    dataProvider.csvList.clear();
+                    dataProvider.setSelectedGender(selectedGender);
                   },
-                  value: selectedGender,
+                  value: dataProvider.selectedGender,
                   isExpanded: true,
                   hint: Text(
                     'Gender',
@@ -511,18 +528,17 @@ class _FilterBoxState extends State<FilterBox> {
               SizedBox(width: 4),
               Expanded(
                 child: DropdownButton(
-                  items: countrySet.toList().map((country) {
+                  items: dataProvider.countrySet.toList().map((country) {
                     return DropdownMenuItem<String>(
                       value: country,
                       child: Text(country),
                     );
                   }).toList(),
                   onChanged: (selectedCountry) {
-                    setState(() {
-                      selectedCountry = selectedCountry;
-                    });
+                    dataProvider.csvList.clear();
+                    dataProvider.setSelectedCountry(selectedCountry);
                   },
-                  value: selectedCountry,
+                  value: dataProvider.selectedCountry,
                   isExpanded: true,
                   hint: Text(
                     'Country',
@@ -543,8 +559,8 @@ class _FilterBoxState extends State<FilterBox> {
                     );
                   }).toList(),
                   onChanged: (selectedColor) {
+                    dataProvider.csvList.clear();
                     dataProvider.setSelectedColor(selectedColor);
-                    dataProvider.filterByColor(selectedColor);
                   },
                   value: dataProvider.selectedColor,
                   isExpanded: true,

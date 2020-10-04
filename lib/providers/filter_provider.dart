@@ -12,40 +12,14 @@ class FilterProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void setListing(List<Filter> filters) {
-    filters = filters;
-    notifyListeners();
-  }
+  // void setListing(List<Filter> filters) {
+  //   filters = filters;
+  //   notifyListeners();
+  // }
   void setFilters(List<Filter> filters) {
     filters = filters;
-  }
- 
-
-  setSelectedYear(selectedYear) {
-    selectedYear = selectedYear;
     notifyListeners();
-  }
-
-  setSelectedGender(selectedGender) {
-    selectedGender = selectedGender;
-    notifyListeners();
-  }
-
-  setSelectedCountry(selectedCountry) {
-    selectedCountry = selectedCountry;
-    notifyListeners();
-  }
-
-  setSelectedColor(selectedColor) {
-    selectedColor = selectedColor;
-    notifyListeners();
-  }
-
-  setSelectedFilter(Filter selectedFilter) {
-    selectedFilter = selectedFilter;
-    notifyListeners();
-  }
-
+  } 
   
   Future<List<Filter>> getFilters() async {
     return await repo.getFilters();
