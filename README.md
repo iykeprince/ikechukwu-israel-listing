@@ -6,10 +6,12 @@ A car owner's listing mobile application
 
 The Provider pattern was used as a design architecture for this application. 
 
-A few resources to get you started if this is your first Flutter project:
+Dependencies used:
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+- [http](https://pub.dev/packages/http)
+- [Provider](https://pub.dev/packages/provider)
+- [csv](https://pub.dev/packages/csv)
+- [flutter_launcher_icon](https://pub.dev/packages/flutter_launcher_icons)
 
 ###Screenshots
 ![screenshot1](1.png) ![screenshot2](2.png)
