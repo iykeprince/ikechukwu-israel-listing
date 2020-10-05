@@ -12,3 +12,6 @@ class NetworkErrorException extends CustomException {
 class BadStatusResponseException extends CustomException {
   BadStatusResponseException(String message) : super(message);
 }
+class CustomFileErrorException extends CustomException {
+  CustomFileErrorException(String message) : super(message);
+}
