@@ -4,7 +4,7 @@ A car owner's listing mobile application
 
 ## Getting Started
 
-The Provider pattern was used as a design architecture for this application. 
+The Provider pattern was used as a design architecture for this application. To improve UI speed the concept of pagination was added to the listview to avoid loading all the data from file at once.
 
 Dependencies used:
 
