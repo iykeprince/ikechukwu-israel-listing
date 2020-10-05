@@ -4,7 +4,7 @@ A car owner's listing mobile application
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+The Provider pattern was used as a design architecture for this application. 
 
 A few resources to get you started if this is your first Flutter project:
 
