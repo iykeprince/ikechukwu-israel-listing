@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:csv/csv.dart';
 import 'package:ikechukwu_israel/models/csv.dart';
-import 'package:ikechukwu_israel/models/filter.dart';
 import 'package:ikechukwu_israel/providers/data_provider.dart';
 import 'package:ikechukwu_israel/utils/custom_helpers.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
 class CsvScreen extends StatelessWidget {
   static const String ROUTE_NAME = "/csv";

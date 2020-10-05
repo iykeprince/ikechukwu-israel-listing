@@ -7,6 +7,18 @@ class FilterProvider with ChangeNotifier {
   Repository repo = Repository();
   List<Filter> filters = [];
   int page = 0;
+  String _errorMessage;
+  String get errorMessage => _errorMessage;
+
+  void notifyError(String message) {
+    _errorMessage = message;
+    notifyListeners();
+  }
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   setPage(int page) {
     page = page;
@@ -26,8 +38,7 @@ class FilterProvider with ChangeNotifier {
     try {
       return await repo.getFilters();
     } catch (e) {
-      print('Error exception: $e');
-      print('Error message: ${e.errorMessage()}');
+      print('error occurred: ${e.errorMessage()}');
     }
   }
 }

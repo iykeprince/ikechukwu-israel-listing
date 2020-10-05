@@ -50,7 +50,6 @@ class HomeScreen extends StatelessWidget {
 
   initLoad() {
     if (providerCsvList != null) {
-      print('providerCsvList: ${providerCsvList.length}');
       List.generate(dataProvider.currentMax,
           (index) => dataProvider.addCsvList(providerCsvList[index]));
     }
@@ -60,7 +59,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     providerCsvList = Provider.of<List<Csv>>(context, listen: true);
     dataProvider = Provider.of<DataProvider>(context, listen: false);
-    filters = Provider.of<List<Filter>>(context, listen: false);
+    filters = Provider.of<List<Filter>>(context, listen: true);
     filterProvider = Provider.of<FilterProvider>(context, listen: false);
 
     if (filters != null) {
@@ -68,6 +67,7 @@ class HomeScreen extends StatelessWidget {
     }
 
     Future.delayed(Duration.zero, () async => initLoad());
+
     return Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
@@ -463,8 +463,16 @@ class FilterBox extends StatelessWidget {
                           dataProvider.setSelectedColor(null);
                           dataProvider.isFiltered = false;
                         },
-                        icon: Icon(Icons.clear, color: Colors.white,),
-                        label: Text('Clear filter', style: TextStyle(color: Colors.white,),),
+                        icon: Icon(
+                          Icons.clear,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          'Clear filter',
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
                         color: Colors.indigo,
                       )
                     : Container(),

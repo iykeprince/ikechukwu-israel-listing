@@ -14,10 +14,10 @@ class ApiService {
       if (response.statusCode == 200) {
         return response.body;
       } else {
-        throw BadStatusResponseException('Failed to fetch data.');
+        throw new BadStatusResponseException('Failed to fetch data.');
       }
     } catch(e) {
-      throw NetworkErrorException(
+      throw new NetworkErrorException(
           'An error occurred. Please check your internet connection.');
     }
   }

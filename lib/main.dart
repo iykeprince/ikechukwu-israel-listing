@@ -9,13 +9,14 @@ import 'utils/custom_router.dart';
 
 void main() {
   runApp(
-    MultiProvider(providers: [
-      ChangeNotifierProvider(create: (_) => FilterProvider()),
-      ChangeNotifierProvider(create: (_) => DataProvider()),
-      FutureProvider(create: (_) => CsvProvider().loadCsv()),
-      FutureProvider(create: (_) => FilterProvider().getFilters()),
-    ],
-    child: MyApp(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => FilterProvider()),
+        ChangeNotifierProvider(create: (_) => DataProvider()),
+        FutureProvider(create: (_) => CsvProvider().loadCsv()),
+        FutureProvider(create: (_) => FilterProvider().getFilters()),
+      ],
+      child: MyApp(),
     ),
   );
 }
@@ -28,10 +29,9 @@ class MyApp extends StatelessWidget {
       title: 'Ikechukwu Israel',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        fontFamily: 'Raleway'
-      ),
+          primarySwatch: Colors.deepOrange,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          fontFamily: 'Raleway'),
       home: HomeScreen(),
       onGenerateRoute: CustomRouter.generateRoute,
     );
