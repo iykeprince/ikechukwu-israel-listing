@@ -38,7 +38,7 @@ class FilterProvider with ChangeNotifier {
     try {
       return await repo.getFilters();
     } catch (e) {
-      print('error occurred: ${e.errorMessage()}');
+      return [];
     }
   }
 }

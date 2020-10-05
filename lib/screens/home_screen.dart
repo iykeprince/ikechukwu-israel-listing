@@ -49,7 +49,7 @@ class HomeScreen extends StatelessWidget {
   ScrollController _scrollController;
 
   initLoad() {
-    if (providerCsvList != null) {
+    if (providerCsvList != null && providerCsvList.length > 0) {
       List.generate(dataProvider.currentMax,
           (index) => dataProvider.addCsvList(providerCsvList[index]));
     }
@@ -90,16 +90,23 @@ class HomeScreen extends StatelessWidget {
                               gradient: LinearGradient(
                                   colors: [Colors.deepOrange, Colors.orange])),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               SizedBox(
                                 height: 24.0,
                               ),
                               _buildHeader(),
                               filters == null
-                                  ? Center(
-                                      child: CircularProgressIndicator(),
-                                    )
-                                  : FilterLayout(
+                                  ?  Center(
+                                        child: CircularProgressIndicator(),
+                                      )
+                                  
+                                  : filters.length == 0 ? Padding(
+                                    padding: const EdgeInsets.all(28.0),
+                                    child: Center(
+                                      child: Text('Something went wrong. please check your internet connection.', style: TextStyle(color: Colors.white, fontSize: 19.0,),),
+                                    ),
+                                  ) : FilterLayout(
                                       filters: filters,
                                     ),
                             ],
